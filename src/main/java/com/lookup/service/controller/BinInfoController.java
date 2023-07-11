@@ -34,15 +34,15 @@ public class BinInfoController {
     /**
      * Validates a card based on the provided search parameter.
      *
-     * @param search the search parameter representing the card
+     * @param searchField the search parameter representing the card
      * @return the view name for the information page
      */
     @PostMapping("/validate-card")
     public String validateCard(
-            @RequestParam("search") String search,
+            @RequestParam("searchField") String searchField,
             Model model
     ) {
-        Optional<BinInfoResponseDTO> binInfo = binInfoService.validateCard(new ValidationRequestDTO(search));
+        Optional<BinInfoResponseDTO> binInfo = binInfoService.validateCard(new ValidationRequestDTO(searchField));
         model.addAttribute("binInfo", binInfo.orElse(null));
         return BIN_INFO_PAGE;
     }
