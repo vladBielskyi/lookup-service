@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Bin Info Search</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<form th:action="@{/infos/validate-card}" th:method="post">
+    <label for="searchField">Search:</label>
+    <input type="text" id="searchField" name="searchField" required>
+    <button type="submit">Search</button>
+</form>
+
+<table id="binInfoTable">
+    <thead>
+    <tr>
+        <th>bin</th>
+        <th>alphacode</th>
+        <th>bank</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="binInfo : ${binInfo}">
+        <td th:text="${binInfo.bin}"></td>
+        <td th:text="${binInfo.alphaCode}"></td>
+        <td th:text="${binInfo.bank}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
