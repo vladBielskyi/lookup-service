@@ -17,6 +17,7 @@ import java.util.Optional;
 @RequestMapping("/infos")
 @RequiredArgsConstructor
 public class BinInfoController {
+    
     private final BinInfoService binInfoService;
 
     private static final String BIN_INFO_PAGE = "bin-info";
