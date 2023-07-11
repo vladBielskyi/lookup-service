@@ -64,32 +64,25 @@ public class BinInfoServiceImpl implements BinInfoService {
     @Scheduled(fixedRate = 60, timeUnit = TimeUnit.MINUTES) // run every 60 minutes
     public void importBinInfosFromZip() {
         log.info("Starting import BinInfos");
-        List<BinInfo> incomeBinInfos = fileService.fetchBeansFromZipFile(new TypeReference<List<BinInfo>>() {},
+        List<BinInfo> incomeBinInfos = fileService.fetchBeansFromZipFile(
+                new TypeReference<List<BinInfo>>() {},
                 binInfoFilePath,
-                binInfoFileName);
+                binInfoFileName
+        );
 
         if (incomeBinInfos.isEmpty()) {
             log.warn("No bin infos found in the ZIP file. Skipping import.");
             return;
         }
-
         log.info("Found {} bin infos in the ZIP file. Saving to the database.", incomeBinInfos.size());
 
-        List<List<BinInfo>> listOfBinSub = ListUtil.createSubList(incomeBinInfos, BATCH_SIZE);
-        List<Runnable> runnable = listOfBinSub.stream()
-                .map(sublist -> (Runnable) () -> {
-                    saveBatchBinInfos(sublist);
-                    log.info("batch saved [{}]", sublist.size());
-                })
-                .collect(Collectors.toList());
-
+        List<Runnable> runnable = buildBatchedRunnable(incomeBinInfos, BATCH_SIZE);
         CountDownLatch latch = new CountDownLatch(runnable.size());
-        for (Runnable task : runnable) {
-            executorService.submit(() -> {
-                task.run();
-                latch.countDown();
-            });
-        }
+
+        runnable.forEach(task -> executorService.submit(() -> {
+            task.run();
+            latch.countDown();
+        }));
 
         try {
             latch.await(AWAIT_TIME_MINUTES, TimeUnit.MINUTES);
@@ -98,7 +91,7 @@ public class BinInfoServiceImpl implements BinInfoService {
         }
 
         LocalDateTime createdThreshold = LocalDateTime.now().minusMinutes(60);
-        binInfoRepository.deleteAllByCreated(createdThreshold); // delete old data
+        binInfoRepository.deleteAllByCreated(createdThreshold); // Delete old data
         log.info("Successfully imported bin infos from the ZIP file.");
     }
 
@@ -138,5 +131,21 @@ public class BinInfoServiceImpl implements BinInfoService {
      */
     private Iterable<BinInfo> saveBatchBinInfos(List<BinInfo> batch) {
         return binInfoRepository.saveAll(batch);
+    }
+
+    /**
+     * Builds a list of batched runnable tasks based on the provided bin info list and batch size.
+     *
+     * @param binInfoList the list of bin infos to be processed
+     * @param batchSize   the size of each batch
+     * @return the list of batched runnable tasks
+     */
+    private List<Runnable> buildBatchedRunnable(List<BinInfo> binInfoList, Integer batchSize) {
+        return ListUtil.createSubList(binInfoList, batchSize).stream()
+                .map(sublist -> (Runnable) () -> {
+                    saveBatchBinInfos(sublist);
+                    log.info("batch saved [{}]", sublist.size());
+                })
+                .collect(Collectors.toList());
     }
 }

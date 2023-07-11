@@ -17,23 +17,34 @@ import java.util.Optional;
 @RequestMapping("/infos")
 @RequiredArgsConstructor
 public class BinInfoController {
-
     private final BinInfoService binInfoService;
 
+    private static final String BIN_INFO_PAGE = "bin-info";
+
+    /**
+     * Retrieves the information page.
+     *
+     * @return the view name for the information page
+     */
     @GetMapping
     public String getInfosPage() {
-        return "bin-info";
+        return BIN_INFO_PAGE;
     }
 
+    /**
+     * Validates a card based on the provided search parameter.
+     *
+     * @param search the search parameter representing the card
+     * @return the view name for the information page
+     */
     @PostMapping("/validate-card")
     public String validateCard(
-            @RequestParam("searchField") String searchField,
+            @RequestParam("search") String search,
             Model model
     ) {
-        Optional<BinInfoResponseDTO> binInfo = binInfoService.
-                validateCard(new ValidationRequestDTO(searchField));
+        Optional<BinInfoResponseDTO> binInfo = binInfoService.validateCard(new ValidationRequestDTO(search));
         model.addAttribute("binInfo", binInfo.orElse(null));
-        return "bin-info";
+        return BIN_INFO_PAGE;
     }
 }
 
